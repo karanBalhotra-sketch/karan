@@ -1,58 +1,69 @@
 pipeline {
     agent any
 
-    environment {
-        EMAIL_RECIPIENT = 'karanbalhotra@gmail.com'
-    }
-
     stages {
         stage('Build') {
             steps {
-                bat 'python -m compileall main.py'
+                echo 'Building the project'
+                // Typically not required for HTML/CSS projects
             }
         }
         stage('Unit and Integration Tests') {
             steps {
-                bat 'echo Running unit and integration tests...'
+                echo 'Running unit tests'
+                // No automated tests specified for HTML/CSS projects
             }
         }
         stage('Code Analysis') {
             steps {
-                bat 'echo Analyzing code...'
+                echo 'Performing code analysis'
+                // No specific code analysis tools required for HTML/CSS projects
             }
         }
         stage('Security Scan') {
             steps {
-                bat 'echo Performing security scan...'
+                echo 'Performing security scan'
+                // No security scans specified for HTML/CSS projects
             }
         }
         stage('Deploy to Staging') {
             steps {
-                bat 'echo Deploying to staging...'
+                echo 'Deploying to staging server'
+                // No deployment needed
             }
         }
         stage('Integration Tests on Staging') {
             steps {
-                bat 'echo Running integration tests on staging...'
+                echo 'Running integration tests on staging'
+                // No specific integration tests specified for HTML/CSS projects
             }
         }
         stage('Deploy to Production') {
             steps {
-                bat 'echo Deploying to production...'
+                echo 'Deploying to production server'
+                // No deployment needed
             }
         }
     }
 
     post {
-        always {
-            script {
-                emailext(
-                    subject: "Pipeline Notification: ${currentBuild.currentResult}",
-                    body: "The Jenkins pipeline has completed with status: ${currentBuild.currentResult}.",
-                    recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                    to: "${env.EMAIL_RECIPIENT}"
-                )
-            }
+        success {
+            echo 'Pipeline succeeded! Sending notification email...'
+            emailext(
+                subject: "Pipeline Notification: ${currentBuild.currentResult}",
+                body: "The Jenkins pipeline has completed successfully.",
+                recipientProviders: [[$class: 'DevelopersRecipientProvider']],
+                to: "karanbalhotra@gmail.com"
+            )
+        }
+        failure {
+            echo 'Pipeline failed! Sending notification email...'
+            emailext(
+                subject: "Pipeline Notification: ${currentBuild.currentResult}",
+                body: "The Jenkins pipeline has failed. Please check the logs for details.",
+                recipientProviders: [[$class: 'DevelopersRecipientProvider']],
+                to: "karanbalhotra@gmail.com"
+            )
         }
     }
 }

@@ -51,7 +51,10 @@ pipeline {
             echo 'Pipeline succeeded! Sending notification email...'
             emailext(
                 subject: "Pipeline Notification: ${currentBuild.currentResult}",
-                body: "The Jenkins pipeline has completed successfully.",
+                body: """<p>The Jenkins pipeline has completed successfully.</p>
+                         <p>Job: ${env.JOB_NAME}</p>
+                         <p>Build Number: ${env.BUILD_NUMBER}</p>
+                         <p>Build URL: ${env.BUILD_URL}</p>""",
                 recipientProviders: [[$class: 'DevelopersRecipientProvider']],
                 to: "karanbalhotra@gmail.com"
             )
@@ -60,7 +63,10 @@ pipeline {
             echo 'Pipeline failed! Sending notification email...'
             emailext(
                 subject: "Pipeline Notification: ${currentBuild.currentResult}",
-                body: "The Jenkins pipeline has failed. Please check the logs for details.",
+                body: """<p>The Jenkins pipeline has failed. Please check the logs for details.</p>
+                         <p>Job: ${env.JOB_NAME}</p>
+                         <p>Build Number: ${env.BUILD_NUMBER}</p>
+                         <p>Build URL: ${env.BUILD_URL}</p>""",
                 recipientProviders: [[$class: 'DevelopersRecipientProvider']],
                 to: "karanbalhotra@gmail.com"
             )

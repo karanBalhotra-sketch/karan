@@ -5,6 +5,10 @@ pipeline {
         EMAIL_RECIPIENT = 'karanbalhotra@gmail.com'
     }
 
+    triggers {
+        pollSCM('* * * * *') // This trigger makes the pipeline poll for changes every minute
+    }
+
     stages {
         stage('Build') {
             steps {

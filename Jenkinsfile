@@ -22,5 +22,18 @@ pipeline {
                 }
             }
         }
+        stage('Test') {
+            steps {
+                script {
+                    // Verify if pom.xml exists
+                    if (fileExists('pom.xml')) {
+                        echo 'pom.xml found, proceeding with tests.'
+                        sh 'mvn test'
+                    } else {
+                        error 'pom.xml not found in the workspace.'
+                    }
+                }
+            }
+        }
     }
 }

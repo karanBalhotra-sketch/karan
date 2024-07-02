@@ -12,7 +12,6 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // Verify if pom.xml exists
                     if (fileExists('pom.xml')) {
                         echo 'pom.xml found, proceeding with build.'
                         sh 'mvn clean package'
@@ -25,15 +24,26 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Verify if pom.xml exists
                     if (fileExists('pom.xml')) {
                         echo 'pom.xml found, proceeding with tests.'
-                        sh 'mvn test'
+                        def mvnOutput = sh(script: 'mvn test', returnStdout: true).trim()
+                        if (mvnOutput.contains("Tests run: 1, Failures: 0, Errors: 0, Skipped: 0")) {
+                            echo 'Tests passed!'
+                        } else {
+                            echo 'TEST NOT PASSED'
+                            currentBuild.result = 'FAILURE'
+                            error 'Tests did not pass. Failing the build.'
+                        }
                     } else {
                         error 'pom.xml not found in the workspace.'
                     }
                 }
             }
+        }
+    }
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'
         }
     }
 }

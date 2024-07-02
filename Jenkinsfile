@@ -33,22 +33,6 @@ pipeline {
                 }
             }
         }
-        stage('Package') {
-            steps {
-                script {
-                    if (fileExists('pom.xml')) {
-                        echo 'pom.xml found, creating JAR file.'
-                        sh 'mvn package' // This command creates the JAR file
-                    } else {
-                        error 'pom.xml not found in the workspace.'
-                    }
-                }
-                post {
-                    success {
-                        archiveArtifacts(artifacts: '**/target/*.jar', allowEmptyArchive: true)
-                    }
-                }
-            }
-        }
+
     }
 }

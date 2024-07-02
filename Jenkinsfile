@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        maven 'maven'
+        maven 'maven' // Ensure this matches the name in your Global Tool Configuration
     }
     stages {
         stage('Checkout the project') {
@@ -26,24 +26,13 @@ pipeline {
                 script {
                     if (fileExists('pom.xml')) {
                         echo 'pom.xml found, proceeding with tests.'
-                        def mvnOutput = sh(script: 'mvn test', returnStdout: true).trim()
-                        if (mvnOutput.contains("Tests run: 1, Failures: 0, Errors: 0, Skipped: 0")) {
-                            echo 'Tests passed!'
-                        } else {
-                            echo 'TEST NOT PASSED'
-                            currentBuild.result = 'FAILURE'
-                            error 'Tests did not pass. Failing the build.'
-                        }
+                        sh 'mvn test'
                     } else {
                         error 'pom.xml not found in the workspace.'
                     }
                 }
             }
         }
-    }
-    post {
-        always {
-            junit '**/target/surefire-reports/*.xml'
-        }
+
     }
 }

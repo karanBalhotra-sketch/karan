@@ -1,4 +1,4 @@
-// src/main/java/com/example/App.java
+// src/main/java/com/example/App.j
 package com.example;
 
 public class App {

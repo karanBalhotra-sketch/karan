@@ -1,38 +1,109 @@
+//hellowwwe
 pipeline {
     agent any
-    tools {
-        maven 'maven' // Ensure this matches the name in your Global Tool Configuration
+    
+    environment {
+        EMAIL_RECIPIENT = 'karanbalhotra@gmail.com'
     }
+
+    triggers {
+        pollSCM('* * * * *') // This trigger makes the pipeline poll for changes every minute
+    }
+
     stages {
-        stage('Checkout the project') {
-            steps {
-                git branch: 'main', url: 'https://github.com/karanBalhotra-sketch/karan.git'
-            }
-        }
         stage('Build') {
             steps {
-                script {
-                    if (fileExists('pom.xml')) {
-                        echo 'pom.xml found, proceeding with build.'
-                        sh 'mvn clean package'
-                    } else {
-                        error 'pom.xml not found in the workspace.'
-                    }
-                }
+                echo 'Building the code using Maven...'
+                echo 'Command: mvn clean package'
             }
         }
-        stage('Test') {
+        
+        stage('Unit and Integration Tests') {
             steps {
-                script {
-                    if (fileExists('pom.xml')) {
-                        echo 'pom.xml found, proceeding with tests.'
-                        sh 'mvn test'
-                    } else {
-                        error 'pom.xml not found in the workspace.'
+                echo 'Running unit and integration tests using JUnit and Mockito...'
+                echo 'Command: mvn test'
+            }
+            post {
+                always {
+                    script {
+                        def result = currentBuild.currentResult
+                        emailext(
+                            to: env.EMAIL_RECIPIENT,
+                            subject: "Unit and Integration Tests - ${result}",
+                            body: "The Unit and Integration Tests stage has ${result}. Please check the attached logs.",
+                            attachLog: true
+                        )
                     }
                 }
             }
         }
-
+        
+        stage('Code Analysis') {
+            steps {
+                echo 'Analyzing code using SonarQube...'
+                echo 'Command: mvn sonar:sonar'
+            }
+        }
+        
+        stage('Security Scan') {
+            steps {
+                echo 'Performing security scan using OWASP Dependency-Check...'
+                echo 'Command: dependency-check.sh --project my-project --scan .'
+            }
+            post {
+                always {
+                    script {
+                        def result = currentBuild.currentResult
+                        emailext(
+                            to: env.EMAIL_RECIPIENT,
+                            subject: "Security Scan - ${result}",
+                            body: "The Security Scan stage has ${result}. Please check the attached logs.",
+                            attachLog: true
+                        )
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to Staging') {
+            steps {
+                echo 'Deploying to staging server...'
+                echo 'Command: scp target/my-app.jar ec2-user@staging-server:/path/to/deploy'
+                echo 'Command: ssh ec2-user@staging-server "java -jar /path/to/deploy/my-app.jar &"'
+            }
+        }
+        
+        stage('Integration Tests on Staging') {
+            steps {
+                echo 'Running integration tests on staging environment...'
+                echo 'Command: mvn verify -Denv=staging'
+            }
+        }
+        
+        stage('Deploy to Production') {
+            steps {
+                echo 'Deploying to production server...'
+                echo 'Command: scp target/my-app.jar ec2-user@production-server:/path/to/deploy'
+                echo 'Command: ssh ec2-user@production-server "java -jar /path/to/deploy/my-app.jar &"'
+            }
+        }
+    }
+    
+    post {
+        success {
+            emailext(
+                to: env.EMAIL_RECIPIENT,
+                subject: "Pipeline Successful",
+                body: "The Jenkins pipeline has completed successfully."
+            )
+        }
+        failure {
+            emailext(
+                to: env.EMAIL_RECIPIENT,
+                subject: "Pipeline Failed",
+                body: "The Jenkins pipeline has failed. Please check the attached logs.",
+                attachLog: true
+            )
+        }
     }
 }

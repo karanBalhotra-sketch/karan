@@ -1,108 +1,108 @@
 pipeline {
     agent any
-
+    
     environment {
         EMAIL_RECIPIENT = 'karanbalhotra@gmail.com'
+    }
+
+    triggers {
+        pollSCM('* * * * *') // This trigger makes the pipeline poll for changes every minute
     }
 
     stages {
         stage('Build') {
             steps {
-                script {
-                    // Example using Maven for build automation
-                    bat 'mvn clean package'
-                }
+                echo 'Building the code using Maven...'
+                echo 'Command: mvn clean package'
             }
         }
+        
         stage('Unit and Integration Tests') {
             steps {
-                script {
-                    // Example using JUnit for unit and integration tests
-                    bat 'mvn test'
+                echo 'Running unit and integration tests using JUnit and Mockito...'
+                echo 'Command: mvn test'
+            }
+            post {
+                always {
+                    script {
+                        def result = currentBuild.currentResult
+                        emailext(
+                            to: env.EMAIL_RECIPIENT,
+                            subject: "Unit and Integration Tests - ${result}",
+                            body: "The Unit and Integration Tests stage has ${result}. Please check the attached logs.",
+                            attachLog: true
+                        )
+                    }
                 }
             }
         }
+        
         stage('Code Analysis') {
             steps {
-                script {
-                    // Example using SonarQube for code analysis
-                    bat 'mvn sonar:sonar'
-                }
+                echo 'Analyzing code using SonarQube...'
+                echo 'Command: mvn sonar:sonar'
             }
         }
+        
         stage('Security Scan') {
             steps {
-                script {
-                    // Example using OWASP Dependency-Check for security scanning
-                    bat 'dependency-check.bat --project MyProject --scan .'
+                echo 'Performing security scan using OWASP Dependency-Check...'
+                echo 'Command: dependency-check.sh --project my-project --scan .'
+            }
+            post {
+                always {
+                    script {
+                        def result = currentBuild.currentResult
+                        emailext(
+                            to: env.EMAIL_RECIPIENT,
+                            subject: "Security Scan - ${result}",
+                            body: "The Security Scan stage has ${result}. Please check the attached logs.",
+                            attachLog: true
+                        )
+                    }
                 }
             }
         }
+        
         stage('Deploy to Staging') {
             steps {
-                script {
-                    // Example deploy to AWS EC2 using AWS CLI
-                    bat 'aws deploy push --application-name MyApp --s3-location s3://mybucket/myapp.zip'
-                }
+                echo 'Deploying to staging server...'
+                echo 'Command: scp target/my-app.jar ec2-user@staging-server:/path/to/deploy'
+                echo 'Command: ssh ec2-user@staging-server "java -jar /path/to/deploy/my-app.jar &"'
             }
         }
+        
         stage('Integration Tests on Staging') {
             steps {
-                script {
-                    // Example running integration tests in the staging environment
-                    bat 'mvn verify -Denv=staging'
-                }
+                echo 'Running integration tests on staging environment...'
+                echo 'Command: mvn verify -Denv=staging'
             }
         }
+        
         stage('Deploy to Production') {
             steps {
-                script {
-                    // Example deploy to AWS EC2 using AWS CLI
-                    bat 'aws deploy push --application-name MyApp --s3-location s3://mybucket/myapp-prod.zip'
-                }
+                echo 'Deploying to production server...'
+                echo 'Command: scp target/my-app.jar ec2-user@production-server:/path/to/deploy'
+                echo 'Command: ssh ec2-user@production-server "java -jar /path/to/deploy/my-app.jar &"'
             }
         }
     }
-
+    
     post {
-        always {
-            script {
-                emailext(
-                    subject: "Pipeline Notification: ${currentBuild.currentResult}",
-                    body: "The Jenkins pipeline has completed with status: ${currentBuild.currentResult}. Logs are attached.",
-                    to: "${env.EMAIL_RECIPIENT}",
-                    attachLog: true
-                )
-            }
+        success {
+            emailext(
+                to: env.EMAIL_RECIPIENT,
+                subject: "Pipeline Successful",
+                body: "The Jenkins pipeline has completed successfully."
+            )
         }
-        // Notification after specific stages
-        stage('Unit and Integration Tests') {
-            post {
-                always {
-                    script {
-                        emailext(
-                            subject: "Unit and Integration Tests Notification: ${currentBuild.currentResult}",
-                            body: "The Unit and Integration Tests stage has completed with status: ${currentBuild.currentResult}. Logs are attached.",
-                            to: "${env.EMAIL_RECIPIENT}",
-                            attachLog: true
-                        )
-                    }
-                }
-            }
-        }
-        stage('Security Scan') {
-            post {
-                always {
-                    script {
-                        emailext(
-                            subject: "Security Scan Notification: ${currentBuild.currentResult}",
-                            body: "The Security Scan stage has completed with status: ${currentBuild.currentResult}. Logs are attached.",
-                            to: "${env.EMAIL_RECIPIENT}",
-                            attachLog: true
-                        )
-                    }
-                }
-            }
+        failure {
+            emailext(
+                to: env.EMAIL_RECIPIENT,
+                subject: "Pipeline Failed",
+                body: "The Jenkins pipeline has failed. Please check the attached logs.",
+                attachLog: true
+            )
         }
     }
 }

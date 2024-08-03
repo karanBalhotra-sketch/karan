@@ -8,37 +8,58 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                bat 'python -m compileall main.py'
+                script {
+                    // Example using Maven for build automation
+                    bat 'mvn clean package'
+                }
             }
         }
         stage('Unit and Integration Tests') {
             steps {
-                bat 'echo Running unit and integration tests...'
+                script {
+                    // Example using JUnit for unit and integration tests
+                    bat 'mvn test'
+                }
             }
         }
         stage('Code Analysis') {
             steps {
-                bat 'echo Analyzing code...'
+                script {
+                    // Example using SonarQube for code analysis
+                    bat 'mvn sonar:sonar'
+                }
             }
         }
         stage('Security Scan') {
             steps {
-                bat 'echo Performing security scan...'
+                script {
+                    // Example using OWASP Dependency-Check for security scanning
+                    bat 'dependency-check.bat --project MyProject --scan .'
+                }
             }
         }
         stage('Deploy to Staging') {
             steps {
-                bat 'echo Deploying to staging...'
+                script {
+                    // Example deploy to AWS EC2 using AWS CLI
+                    bat 'aws deploy push --application-name MyApp --s3-location s3://mybucket/myapp.zip'
+                }
             }
         }
         stage('Integration Tests on Staging') {
             steps {
-                bat 'echo Running integration tests on staging...'
+                script {
+                    // Example running integration tests in the staging environment
+                    bat 'mvn verify -Denv=staging'
+                }
             }
         }
         stage('Deploy to Production') {
             steps {
-                bat 'echo Deploying to production...'
+                script {
+                    // Example deploy to AWS EC2 using AWS CLI
+                    bat 'aws deploy push --application-name MyApp --s3-location s3://mybucket/myapp-prod.zip'
+                }
             }
         }
     }
@@ -48,10 +69,39 @@ pipeline {
             script {
                 emailext(
                     subject: "Pipeline Notification: ${currentBuild.currentResult}",
-                    body: "The Jenkins pipeline has completed with status: ${currentBuild.currentResult}.",
-                    recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                    to: "${env.EMAIL_RECIPIENT}"
+                    body: "The Jenkins pipeline has completed with status: ${currentBuild.currentResult}. Logs are attached.",
+                    to: "${env.EMAIL_RECIPIENT}",
+                    attachLog: true
                 )
+            }
+        }
+        // Notification after specific stages
+        stage('Unit and Integration Tests') {
+            post {
+                always {
+                    script {
+                        emailext(
+                            subject: "Unit and Integration Tests Notification: ${currentBuild.currentResult}",
+                            body: "The Unit and Integration Tests stage has completed with status: ${currentBuild.currentResult}. Logs are attached.",
+                            to: "${env.EMAIL_RECIPIENT}",
+                            attachLog: true
+                        )
+                    }
+                }
+            }
+        }
+        stage('Security Scan') {
+            post {
+                always {
+                    script {
+                        emailext(
+                            subject: "Security Scan Notification: ${currentBuild.currentResult}",
+                            body: "The Security Scan stage has completed with status: ${currentBuild.currentResult}. Logs are attached.",
+                            to: "${env.EMAIL_RECIPIENT}",
+                            attachLog: true
+                        )
+                    }
+                }
             }
         }
     }
